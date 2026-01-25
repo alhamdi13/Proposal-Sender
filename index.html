@@ -9,6 +9,11 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
+        .btn-sent {
+            background-color: #f3f4f6 !important;
+            color: #9ca3af !important;
+            cursor: default;
+        }
     </style>
 </head>
 <body class="bg-gray-50 p-4 md:p-8">
@@ -16,9 +21,14 @@
     <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         
         <!-- Header -->
-        <div class="bg-blue-900 p-6 text-white">
-            <h1 class="text-2xl font-bold">Kirim Proposal IKATP</h1>
-            <p class="text-blue-100 mt-2">Alat kirim pesan otomatis dengan template Surat Pengantar, Link Proposal, & Nama Perusahaan.</p>
+        <div class="bg-blue-900 p-6 text-white flex justify-between items-center flex-wrap gap-4">
+            <div>
+                <h1 class="text-2xl font-bold">Kirim Proposal IKATP</h1>
+                <p class="text-blue-100 mt-2">Alat kirim pesan otomatis dengan pelacak status pengiriman.</p>
+            </div>
+            <button onclick="resetHistory()" class="bg-blue-800 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg border border-blue-700 transition">
+                <i class="fas fa-trash-alt mr-2"></i> Reset Status
+            </button>
         </div>
 
         <div class="p-6 space-y-6">
@@ -26,13 +36,19 @@
             <!-- Step 1: Upload -->
             <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
                 <h2 class="font-bold text-blue-900 mb-2">1. Unggah Database (CSV)</h2>
-                <input type="file" id="csvFile" accept=".csv" class="block w-full text-sm text-gray-500
-                  file:mr-4 file:py-2 file:px-4
-                  file:rounded-full file:border-0
-                  file:text-sm file:font-semibold
-                  file:bg-blue-100 file:text-blue-700
-                  hover:file:bg-blue-200
-                "/>
+                <div class="flex gap-4 flex-wrap">
+                    <input type="file" id="csvFile" accept=".csv" class="block w-full text-sm text-gray-500
+                    file:mr-4 file:py-2 file:px-4
+                    file:rounded-full file:border-0
+                    file:text-sm file:font-semibold
+                    file:bg-blue-100 file:text-blue-700
+                    hover:file:bg-blue-200
+                    flex-1
+                    "/>
+                    <button onclick="loadSampleData()" class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-50 font-medium">
+                        <i class="fas fa-eye mr-2"></i> Lihat Contoh
+                    </button>
+                </div>
             </div>
 
             <!-- Step 2: Draft Message -->
@@ -59,7 +75,7 @@ Lokasi: Padang (Hybrid Event)
 Kegiatan ini merupakan momentum strategis untuk memperkuat brand awareness [Perusahaan] di kalangan praktisi pertambangan. Kami mengajukan permohonan kerjasama Sponsorship (Gold, Silver, Bronze) untuk menyukseskan acara tersebut.
 
 Berikut link proposal lengkap kami:
-https://drive.google.com/file/d/1205wFDiMSl_lCT_lJepegecq_66BRH7V/view?usp=sharing
+https://drive.google.com/file/d/1205wFDiMSl_lCT_lJepegecq_66BRH7V/view?usp=sharing                               
 
 Besar harapan kami agar [Perusahaan] dapat menjadi bagian dari kesuksesan agenda ini. Kami siap berdiskusi lebih lanjut.
 
@@ -97,19 +113,22 @@ Terima kasih.</textarea>
 
             <!-- Step 3: List & Action -->
             <div>
-                <h2 class="font-bold text-gray-900 mb-4 text-lg">Daftar Penerima</h2>
-                <div class="overflow-x-auto">
+                <h2 class="font-bold text-gray-900 mb-4 text-lg flex justify-between items-center">
+                    <span>Daftar Penerima</span>
+                    <span id="progressCount" class="text-sm font-normal text-gray-500"></span>
+                </h2>
+                <div class="overflow-x-auto border rounded-lg">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama & Perusahaan</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kontak</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48">Aksi</th>
                             </tr>
                         </thead>
                         <tbody id="contactTable" class="bg-white divide-y divide-gray-200">
                             <tr>
-                                <td colspan="3" class="px-6 py-4 text-center text-sm text-gray-500">Silakan unggah file CSV terlebih dahulu.</td>
+                                <td colspan="3" class="px-6 py-4 text-center text-sm text-gray-500">Silakan unggah file CSV atau klik "Lihat Contoh".</td>
                             </tr>
                         </tbody>
                     </table>
@@ -120,6 +139,8 @@ Terima kasih.</textarea>
     </div>
 
     <script>
+        let globalData = [];
+
         document.getElementById('csvFile').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -128,10 +149,32 @@ Terima kasih.</textarea>
                 header: true,
                 skipEmptyLines: true,
                 complete: function(results) {
-                    renderTable(results.data);
+                    globalData = results.data;
+                    renderTable(globalData);
                 }
             });
         });
+
+        function loadSampleData() {
+            const sampleData = [
+                {
+                    '1. NAMA ALUMNI': 'Randa Nofriyaldi Putma',
+                    'Email address': 'contoh@email.com',
+                    '11. No telp WA Pribadi': '081234567890',
+                    '7 Nama Perusahaan tempat anda Bekerja saat ini': 'PT Semen Padang',
+                    '2. Angkatan / Tahun Masuk': '2018'
+                },
+                {
+                    '1. NAMA ALUMNI': 'Muhammad Ilham Cahyadi',
+                    'Email address': 'ilham@contoh.com',
+                    '11. No telp WA Pribadi': '081298765432',
+                    '7 Nama Perusahaan tempat anda Bekerja saat ini': 'Riung Mitra Lestari',
+                    '2. Angkatan / Tahun Masuk': '2014'
+                }
+            ];
+            globalData = sampleData;
+            renderTable(globalData);
+        }
 
         function formatPhoneNumber(phone) {
             if (!phone) return '';
@@ -142,10 +185,25 @@ Terima kasih.</textarea>
             return cleaned;
         }
 
-        // Helper to escape special characters for JS strings
         function escapeStr(str) {
             if (!str) return '';
             return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        }
+
+        function getStorageKey(type, id) {
+            return `ikatp_sent_${type}_${id}`;
+        }
+
+        function resetHistory() {
+            if(confirm("Hapus semua status 'Terkirim'?")) {
+                Object.keys(localStorage).forEach(key => {
+                    if (key.startsWith('ikatp_sent_')) {
+                        localStorage.removeItem(key);
+                    }
+                });
+                if(globalData.length > 0) renderTable(globalData);
+                alert("Riwayat dihapus.");
+            }
         }
 
         function renderTable(data) {
@@ -157,24 +215,43 @@ Terima kasih.</textarea>
                 return;
             }
 
+            let sentCount = 0;
+
             data.forEach((row, index) => {
                 const nama = row['1. NAMA ALUMNI'] || row['Nama'] || 'Alumni';
                 const email = row['Email address'] || row['Email'] || '';
                 
-                // Cari kolom telepon
                 let phoneKey = Object.keys(row).find(key => key.toLowerCase().includes('wa') || key.toLowerCase().includes('telp'));
                 const phone = row[phoneKey] || '';
                 
-                // Cari kolom perusahaan (case insensitive search for "perusahaan")
                 let companyKey = Object.keys(row).find(key => key.toLowerCase().includes('perusahaan'));
-                // Default ke "Perusahaan Bapak/Ibu" jika kosong agar kalimat tetap nyambung
                 let companyRaw = row[companyKey];
                 let companyDisplay = companyRaw || '-';
                 let companyForMsg = companyRaw || 'Perusahaan Bapak/Ibu';
 
                 const formattedPhone = formatPhoneNumber(phone);
 
+                // Check Local Storage Status
+                const isEmailSent = localStorage.getItem(getStorageKey('email', email)) === 'true';
+                const isWaSent = localStorage.getItem(getStorageKey('wa', formattedPhone)) === 'true';
+
+                if (isEmailSent || isWaSent) sentCount++;
+
+                // Define Button Styles based on Status
+                const emailBtnClass = isEmailSent 
+                    ? "btn-sent px-3 py-1 rounded inline-flex items-center text-sm border border-gray-200" 
+                    : "bg-blue-100 text-blue-700 hover:bg-blue-200 px-3 py-1 rounded inline-flex items-center text-sm transition cursor-pointer";
+                
+                const waBtnClass = isWaSent 
+                    ? "btn-sent px-3 py-1 rounded inline-flex items-center text-sm border border-gray-200" 
+                    : "bg-green-100 text-green-700 hover:bg-green-200 px-3 py-1 rounded inline-flex items-center text-sm transition cursor-pointer";
+
+                const emailBtnContent = isEmailSent ? '<i class="fas fa-check mr-1"></i> Terkirim' : '<i class="fas fa-paper-plane mr-1"></i> Email';
+                const waBtnContent = isWaSent ? '<i class="fas fa-check mr-1"></i> Terkirim' : '<i class="fab fa-whatsapp mr-1"></i> WA';
+
                 const tr = document.createElement('tr');
+                tr.className = (isEmailSent && isWaSent) ? "bg-gray-50" : "hover:bg-gray-50";
+                
                 tr.innerHTML = `
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="text-sm font-medium text-gray-900">${nama}</div>
@@ -186,27 +263,44 @@ Terima kasih.</textarea>
                         <div class="text-sm text-gray-500">${phone}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                        <button onclick="sendEmail('${escapeStr(email)}', '${escapeStr(nama)}', '${escapeStr(companyForMsg)}')" class="bg-blue-100 text-blue-700 hover:bg-blue-200 px-3 py-1 rounded inline-flex items-center">
-                            <i class="fas fa-paper-plane mr-1"></i> Email
+                        <button onclick="sendEmail(this, '${escapeStr(email)}', '${escapeStr(nama)}', '${escapeStr(companyForMsg)}')" class="${emailBtnClass}">
+                            ${emailBtnContent}
                         </button>
-                        <button onclick="sendWA('${formattedPhone}', '${escapeStr(nama)}', '${escapeStr(companyForMsg)}')" class="bg-green-100 text-green-700 hover:bg-green-200 px-3 py-1 rounded inline-flex items-center">
-                            <i class="fab fa-whatsapp mr-1"></i> WA
+                        <button onclick="sendWA(this, '${formattedPhone}', '${escapeStr(nama)}', '${escapeStr(companyForMsg)}')" class="${waBtnClass}">
+                            ${waBtnContent}
                         </button>
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
+
+            // Update stats
+            if(data.length > 0) {
+                 document.getElementById('progressCount').innerText = `${sentCount} terkirim`;
+            }
         }
 
-        function sendEmail(email, name, company) {
+        function markAsSent(btn) {
+            btn.className = "btn-sent px-3 py-1 rounded inline-flex items-center text-sm border border-gray-200 transition";
+            btn.innerHTML = `<i class="fas fa-check mr-1"></i> Terkirim`;
+        }
+
+        function sendEmail(btn, email, name, company) {
+            // Prevent clicking if already sent
+            if (btn.classList.contains('btn-sent')) return;
+
             if (!email) {
                 alert('Email tidak tersedia untuk ' + name);
                 return;
             }
+            
+            markAsSent(btn);
+            localStorage.setItem(getStorageKey('email', email), 'true');
+            // Update stats
+            renderTable(globalData); 
+
             const subject = document.getElementById('emailSubject').value;
             let body = document.getElementById('emailBody').value;
-            
-            // Personalize
             body = body.replace(/\[Nama\]/g, name);
             body = body.replace(/\[Perusahaan\]/g, company);
 
@@ -214,14 +308,21 @@ Terima kasih.</textarea>
             window.location.href = link;
         }
 
-        function sendWA(phone, name, company) {
+        function sendWA(btn, phone, name, company) {
+            // Prevent clicking if already sent
+            if (btn.classList.contains('btn-sent')) return;
+
             if (!phone) {
                 alert('Nomor WA tidak tersedia untuk ' + name);
                 return;
             }
+
+            markAsSent(btn);
+            localStorage.setItem(getStorageKey('wa', phone), 'true');
+            // Update stats
+            renderTable(globalData);
+
             let message = document.getElementById('waBody').value;
-            
-            // Personalize
             message = message.replace(/\[Nama\]/g, name);
             message = message.replace(/\[Perusahaan\]/g, company);
 
