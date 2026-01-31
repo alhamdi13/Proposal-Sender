@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kirim Proposal IKATP</title>
+    <title>Kirim Proposal - Terintegrasi Google Sheet</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
@@ -18,117 +17,78 @@
 </head>
 <body class="bg-gray-50 p-4 md:p-8">
 
-    <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <div class="max-w-5xl mx-auto bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         
         <!-- Header -->
-        <div class="bg-blue-900 p-6 text-white flex justify-between items-center flex-wrap gap-4">
-            <div>
-                <h1 class="text-2xl font-bold">Kirim Proposal IKATP</h1>
-                <p class="text-blue-100 mt-2">Alat kirim pesan otomatis dengan pelacak status pengiriman.</p>
-            </div>
-            <button onclick="resetHistory()" class="bg-blue-800 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg border border-blue-700 transition">
-                <i class="fas fa-trash-alt mr-2"></i> Reset Status
-            </button>
+        <div class="bg-green-800 p-6 text-white">
+            <h1 class="text-2xl font-bold">Proposal Blaster + Google Sheet</h1>
+            <p class="text-green-100 mt-2">Data diambil langsung dari Sheet ID: ... wlF5Uk</p>
         </div>
 
         <div class="p-6 space-y-6">
             
-            <!-- Step 1: Upload -->
-            <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                <h2 class="font-bold text-blue-900 mb-2">1. Unggah Database (CSV)</h2>
-                <div class="flex gap-4 flex-wrap">
-                    <input type="file" id="csvFile" accept=".csv" class="block w-full text-sm text-gray-500
-                    file:mr-4 file:py-2 file:px-4
-                    file:rounded-full file:border-0
-                    file:text-sm file:font-semibold
-                    file:bg-blue-100 file:text-blue-700
-                    hover:file:bg-blue-200
-                    flex-1
-                    "/>
-                    <button onclick="loadSampleData()" class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-50 font-medium">
-                        <i class="fas fa-eye mr-2"></i> Lihat Contoh
+            <!-- Konfigurasi Koneksi -->
+            <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                <label class="block text-sm font-bold text-yellow-900 mb-2">1. Koneksi Google Sheet</label>
+                <div class="flex gap-2">
+                    <input type="text" id="scriptUrl" 
+                           value="https://script.google.com/macros/s/AKfycbz7EVjxbdbu1t88M9ePW1Xpb1-ow7b2gZTJSY2yJPITvQ46Wsc3Eoa72qE2gf3Myob26A/exec" 
+                           class="flex-1 rounded-md border-gray-300 shadow-sm border p-2 text-sm focus:border-green-500 focus:ring-green-500 text-gray-600 bg-gray-100" readonly>
+                    <button onclick="loadDataFromSheet()" id="btnSync" class="bg-green-700 hover:bg-green-800 text-white px-6 py-2 rounded-lg text-sm font-bold transition flex items-center shadow-md">
+                        <i class="fas fa-sync-alt mr-2"></i> Tarik Data
                     </button>
                 </div>
+                <p class="text-xs text-gray-500 mt-2 ml-1">URL Script sudah terisi otomatis.</p>
             </div>
 
-            <!-- Step 2: Draft Message -->
+            <!-- Pesan Draft -->
             <div class="grid md:grid-cols-2 gap-6">
                 <!-- Email Draft -->
-                <div class="border rounded-lg p-4">
-                    <h3 class="font-bold text-gray-800 mb-3 flex items-center"><i class="fas fa-envelope mr-2"></i> Draf Email</h3>
-                    <div class="space-y-3">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Subjek Proposal</label>
-                            <input type="text" id="emailSubject" value="Penawaran Kerjasama & Sponsorship - MUBES IKATP 2026" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2 text-sm focus:border-blue-500 focus:ring-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Isi Email</label>
-                            <textarea id="emailBody" rows="12" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2 text-sm focus:border-blue-500 focus:ring-blue-500">Halo [Nama],
+                <div class="border rounded-lg p-4 bg-gray-50">
+                    <h3 class="font-bold text-gray-800 mb-3 flex items-center"><i class="fas fa-envelope mr-2"></i> Template Email</h3>
+                    <input type="text" id="emailSubject" value="Penawaran Kerjasama - MUBES IKATP 2026" class="mb-2 block w-full rounded border-gray-300 border p-2 text-sm">
+                    <textarea id="emailBody" rows="6" class="block w-full rounded border-gray-300 border p-2 text-sm">Halo [Nama],
 
-Ikatan Alumni Teknik Pertambangan Universitas Negeri Padang (IKATP FT UNP) akan menyelenggarakan agenda akbar:
-MUSYAWARAH BESAR, PEMILIHAN KETUA UMUM & HALAL BIHALAL 2026
-"Sinergi Alumni, Kuatkan Koneksi, Bangun Organisasi"
+Kami mengajukan proposal sponsorship untuk [Perusahaan].
+Link: https://drive.google.com/file/d/1205wFDiMSl_lCT_lJepegecq_66BRH7V/view?usp=sharing
 
-Waktu: 15 – 25 Maret 2026
-Lokasi: Padang (Hybrid Event)
-
-Kegiatan ini merupakan momentum strategis untuk memperkuat brand awareness [Perusahaan] di kalangan praktisi pertambangan. Kami mengajukan permohonan kerjasama Sponsorship (Gold, Silver, Bronze) untuk menyukseskan acara tersebut.
-
-Berikut link proposal lengkap kami:
-https://drive.google.com/file/d/1205wFDiMSl_lCT_lJepegecq_66BRH7V/view?usp=sharing                               
-
-Besar harapan kami agar [Perusahaan] dapat menjadi bagian dari kesuksesan agenda ini. Kami siap berdiskusi lebih lanjut.
-
-Hormat kami,
-Zulfiandra Agustry
-Ketua Pelaksana (WA: +62 853-5518-8353)</textarea>
-                            <p class="text-xs text-gray-500 mt-1">Gunakan <b>[Nama]</b> untuk nama orang dan <b>[Perusahaan]</b> untuk nama kantor.</p>
-                        </div>
-                    </div>
+Salam, Panitia.</textarea>
                 </div>
 
                 <!-- WA Draft -->
-                <div class="border rounded-lg p-4">
-                    <h3 class="font-bold text-gray-800 mb-3 flex items-center"><i class="fab fa-whatsapp mr-2 text-green-600"></i> Draf WhatsApp</h3>
-                    <div class="space-y-3">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Pesan Chat</label>
-                            <textarea id="waBody" rows="12" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2 text-sm focus:border-blue-500 focus:ring-blue-500">Halo [Nama],
+                <div class="border rounded-lg p-4 bg-gray-50">
+                    <h3 class="font-bold text-gray-800 mb-3 flex items-center"><i class="fab fa-whatsapp mr-2 text-green-600"></i> Template WA</h3>
+                    <textarea id="waBody" rows="9" class="block w-full rounded border-gray-300 border p-2 text-sm">Halo [Nama],
 
-Saya Zulfiandra dari Panitia MUBES IKATP FT UNP 2026.
+Kami dari panitia MUBES IKATP ingin menawarkan kerjasama sponsorship untuk [Perusahaan].
 
-Pada Maret 2026 nanti, kami akan mengadakan Musyawarah Besar & Halal Bihalal Alumni di Padang. Kami ingin menawarkan kesempatan kerjasama sponsorship yang strategis untuk [Perusahaan] dalam acara ini.
-
-Proposal lengkap kegiatan dapat dilihat di sini:
-https://drive.google.com/file/d/1205wFDiMSl_lCT_lJepegecq_66BRH7V/view?usp=sharing
-
-Mohon dipelajari, dan jika ada pertanyaan atau ingin diskusi paket sponsor, saya siap membantu.
+Proposal: https://drive.google.com/file/d/1205wFDiMSl_lCT_lJepegecq_66BRH7V/view?usp=sharing
 
 Terima kasih.</textarea>
-                            <p class="text-xs text-gray-500 mt-1">*Link sudah otomatis disertakan.</p>
-                        </div>
-                    </div>
                 </div>
             </div>
 
-            <!-- Step 3: List & Action -->
+            <!-- Tabel Data -->
             <div>
-                <h2 class="font-bold text-gray-900 mb-4 text-lg flex justify-between items-center">
-                    <span>Daftar Penerima</span>
-                    <span id="progressCount" class="text-sm font-normal text-gray-500"></span>
+                <h2 class="font-bold text-gray-900 mb-4 flex justify-between">
+                    <span>Database Donatur</span>
+                    <span id="statusLog" class="text-sm font-normal text-gray-500 italic">Klik tombol 'Tarik Data' untuk mulai.</span>
                 </h2>
-                <div class="overflow-x-auto border rounded-lg">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
+                <div class="overflow-x-auto border rounded-lg max-h-[500px] overflow-y-auto">
+                    <table class="min-w-full divide-y divide-gray-200 relative">
+                        <thead class="bg-gray-100 sticky top-0">
                             <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama & Perusahaan</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kontak</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48">Aksi</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Nama & Perusahaan</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Kontak</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Status di Sheet</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase w-48">Aksi</th>
                             </tr>
                         </thead>
                         <tbody id="contactTable" class="bg-white divide-y divide-gray-200">
                             <tr>
-                                <td colspan="3" class="px-6 py-4 text-center text-sm text-gray-500">Silakan unggah file CSV atau klik "Lihat Contoh".</td>
+                                <td colspan="4" class="px-6 py-8 text-center text-sm text-gray-500">
+                                    Siap dihubungkan ke Database.
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -139,70 +99,40 @@ Terima kasih.</textarea>
     </div>
 
     <script>
-        let globalData = [];
-
-        document.getElementById('csvFile').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            Papa.parse(file, {
-                header: true,
-                skipEmptyLines: true,
-                complete: function(results) {
-                    globalData = results.data;
-                    renderTable(globalData);
-                }
-            });
-        });
-
-        function loadSampleData() {
-            const sampleData = [
-                {
-                    '1. NAMA ALUMNI': 'Randa Nofriyaldi Putma',
-                    'Email address': 'contoh@email.com',
-                    '11. No telp WA Pribadi': '081234567890',
-                    '7 Nama Perusahaan tempat anda Bekerja saat ini': 'PT Semen Padang',
-                    '2. Angkatan / Tahun Masuk': '2018'
-                },
-                {
-                    '1. NAMA ALUMNI': 'Muhammad Ilham Cahyadi',
-                    'Email address': 'ilham@contoh.com',
-                    '11. No telp WA Pribadi': '081298765432',
-                    '7 Nama Perusahaan tempat anda Bekerja saat ini': 'Riung Mitra Lestari',
-                    '2. Angkatan / Tahun Masuk': '2014'
-                }
-            ];
-            globalData = sampleData;
-            renderTable(globalData);
-        }
+        // URL Hardcoded sesuai permintaan
+        const FIXED_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz7EVjxbdbu1t88M9ePW1Xpb1-ow7b2gZTJSY2yJPITvQ46Wsc3Eoa72qE2gf3Myob26A/exec";
+        
+        document.getElementById('scriptUrl').value = FIXED_SCRIPT_URL;
 
         function formatPhoneNumber(phone) {
             if (!phone) return '';
             let cleaned = phone.toString().replace(/\D/g, '');
-            if (cleaned.startsWith('0')) {
-                cleaned = '62' + cleaned.substring(1);
-            }
+            if (cleaned.startsWith('0')) cleaned = '62' + cleaned.substring(1);
             return cleaned;
         }
 
-        function escapeStr(str) {
-            if (!str) return '';
-            return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-        }
+        async function loadDataFromSheet() {
+            const url = document.getElementById('scriptUrl').value;
+            
+            const btn = document.getElementById('btnSync');
+            const originalBtnContent = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Loading...';
+            btn.disabled = true;
 
-        function getStorageKey(type, id) {
-            return `ikatp_sent_${type}_${id}`;
-        }
-
-        function resetHistory() {
-            if(confirm("Hapus semua status 'Terkirim'?")) {
-                Object.keys(localStorage).forEach(key => {
-                    if (key.startsWith('ikatp_sent_')) {
-                        localStorage.removeItem(key);
-                    }
-                });
-                if(globalData.length > 0) renderTable(globalData);
-                alert("Riwayat dihapus.");
+            try {
+                // Fetch Data using GET
+                const response = await fetch(`${url}?action=getData`);
+                const data = await response.json();
+                
+                renderTable(data);
+                document.getElementById('statusLog').innerText = `Berhasil memuat ${data.length} data.`;
+            } catch (error) {
+                console.error(error);
+                alert("Gagal mengambil data. Pastikan URL benar dan Deployment Script diset ke 'Anyone'.");
+                document.getElementById('statusLog').innerText = "Error koneksi.";
+            } finally {
+                btn.innerHTML = originalBtnContent;
+                btn.disabled = false;
             }
         }
 
@@ -210,124 +140,110 @@ Terima kasih.</textarea>
             const tbody = document.getElementById('contactTable');
             tbody.innerHTML = '';
 
-            if (data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="3" class="text-center p-4">Data tidak ditemukan</td></tr>';
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center p-4">Data kosong di Sheet atau format Header tidak sesuai.</td></tr>';
                 return;
             }
 
-            let sentCount = 0;
-
-            data.forEach((row, index) => {
-                const nama = row['1. NAMA ALUMNI'] || row['Nama'] || 'Alumni';
-                const email = row['Email address'] || row['Email'] || '';
+            data.forEach((row) => {
+                // Gunakan mapping key yang aman (case insensitive check sebenarnya lebih baik, tapi ini standard header)
+                const nama = row['Nama'] || 'Tanpa Nama';
+                const email = row['Email'] || '';
+                const wa = row['No WA'] || '';
+                const perusahaan = row['Perusahaan'] || '-';
+                const statusEmail = row['Status Email'] || '';
+                const statusWA = row['Status WA'] || '';
                 
-                let phoneKey = Object.keys(row).find(key => key.toLowerCase().includes('wa') || key.toLowerCase().includes('telp'));
-                const phone = row[phoneKey] || '';
-                
-                let companyKey = Object.keys(row).find(key => key.toLowerCase().includes('perusahaan'));
-                let companyRaw = row[companyKey];
-                let companyDisplay = companyRaw || '-';
-                let companyForMsg = companyRaw || 'Perusahaan Bapak/Ibu';
+                const formattedWA = formatPhoneNumber(wa);
 
-                const formattedPhone = formatPhoneNumber(phone);
-
-                // Check Local Storage Status
-                const isEmailSent = localStorage.getItem(getStorageKey('email', email)) === 'true';
-                const isWaSent = localStorage.getItem(getStorageKey('wa', formattedPhone)) === 'true';
-
-                if (isEmailSent || isWaSent) sentCount++;
-
-                // Define Button Styles based on Status
-                const emailBtnClass = isEmailSent 
-                    ? "btn-sent px-3 py-1 rounded inline-flex items-center text-sm border border-gray-200" 
-                    : "bg-blue-100 text-blue-700 hover:bg-blue-200 px-3 py-1 rounded inline-flex items-center text-sm transition cursor-pointer";
-                
-                const waBtnClass = isWaSent 
-                    ? "btn-sent px-3 py-1 rounded inline-flex items-center text-sm border border-gray-200" 
-                    : "bg-green-100 text-green-700 hover:bg-green-200 px-3 py-1 rounded inline-flex items-center text-sm transition cursor-pointer";
-
-                const emailBtnContent = isEmailSent ? '<i class="fas fa-check mr-1"></i> Terkirim' : '<i class="fas fa-paper-plane mr-1"></i> Email';
-                const waBtnContent = isWaSent ? '<i class="fas fa-check mr-1"></i> Terkirim' : '<i class="fab fa-whatsapp mr-1"></i> WA';
+                // Cek apakah sudah terkirim
+                const isEmailDone = statusEmail && statusEmail.toLowerCase().includes('terkirim');
+                const isWaDone = statusWA && statusWA.toLowerCase().includes('terkirim');
 
                 const tr = document.createElement('tr');
-                tr.className = (isEmailSent && isWaSent) ? "bg-gray-50" : "hover:bg-gray-50";
+                tr.className = "hover:bg-gray-50 transition";
                 
                 tr.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm font-medium text-gray-900">${nama}</div>
-                        <div class="text-xs font-semibold text-blue-600">${companyDisplay}</div>
-                        <div class="text-xs text-gray-500">${row['2. Angkatan / Tahun Masuk'] || ''}</div>
+                    <td class="px-6 py-4">
+                        <div class="text-sm font-bold text-gray-900">${nama}</div>
+                        <div class="text-xs font-semibold text-blue-600">${perusahaan}</div>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">${email}</div>
-                        <div class="text-sm text-gray-500">${phone}</div>
+                    <td class="px-6 py-4">
+                        <div class="text-sm text-gray-600"><i class="fas fa-envelope w-4"></i> ${email}</div>
+                        <div class="text-sm text-gray-600"><i class="fab fa-whatsapp w-4"></i> ${wa}</div>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                        <button onclick="sendEmail(this, '${escapeStr(email)}', '${escapeStr(nama)}', '${escapeStr(companyForMsg)}')" class="${emailBtnClass}">
-                            ${emailBtnContent}
+                    <td class="px-6 py-4">
+                         <div class="text-xs space-y-1">
+                            <span class="${isEmailDone ? 'text-green-600 bg-green-100 border-green-200' : 'text-gray-400 bg-gray-100 border-gray-200'} px-2 py-0.5 rounded border block w-fit">
+                                ${isEmailDone ? statusEmail : 'Email Belum'}
+                            </span>
+                            <span class="${isWaDone ? 'text-green-600 bg-green-100 border-green-200' : 'text-gray-400 bg-gray-100 border-gray-200'} px-2 py-0.5 rounded border block w-fit">
+                                ${isWaDone ? statusWA : 'WA Belum'}
+                            </span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 space-x-2 whitespace-nowrap">
+                        <button onclick="sendAction(this, 'email', '${email}', '${nama.replace(/'/g, "\\'")}', '${perusahaan}')" 
+                                class="${isEmailDone ? 'btn-sent' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'} px-3 py-1 rounded text-sm transition font-medium border border-transparent">
+                             ${isEmailDone ? '<i class="fas fa-check"></i>' : '<i class="fas fa-paper-plane"></i> Email'}
                         </button>
-                        <button onclick="sendWA(this, '${formattedPhone}', '${escapeStr(nama)}', '${escapeStr(companyForMsg)}')" class="${waBtnClass}">
-                            ${waBtnContent}
+                        <button onclick="sendAction(this, 'wa', '${formattedWA}', '${nama.replace(/'/g, "\\'")}', '${perusahaan}')"
+                                class="${isWaDone ? 'btn-sent' : 'bg-green-100 text-green-700 hover:bg-green-200'} px-3 py-1 rounded text-sm transition font-medium border border-transparent">
+                             ${isWaDone ? '<i class="fas fa-check"></i>' : '<i class="fab fa-whatsapp"></i> WA'}
                         </button>
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
-
-            // Update stats
-            if(data.length > 0) {
-                 document.getElementById('progressCount').innerText = `${sentCount} terkirim`;
-            }
         }
 
-        function markAsSent(btn) {
-            btn.className = "btn-sent px-3 py-1 rounded inline-flex items-center text-sm border border-gray-200 transition";
-            btn.innerHTML = `<i class="fas fa-check mr-1"></i> Terkirim`;
-        }
-
-        function sendEmail(btn, email, name, company) {
-            // Prevent clicking if already sent
+        async function sendAction(btn, type, contact, name, company) {
             if (btn.classList.contains('btn-sent')) return;
+            if (!contact) { alert('Kontak kosong!'); return; }
 
-            if (!email) {
-                alert('Email tidak tersedia untuk ' + name);
-                return;
-            }
-            
-            markAsSent(btn);
-            localStorage.setItem(getStorageKey('email', email), 'true');
-            // Update stats
-            renderTable(globalData); 
-
-            const subject = document.getElementById('emailSubject').value;
-            let body = document.getElementById('emailBody').value;
-            body = body.replace(/\[Nama\]/g, name);
-            body = body.replace(/\[Perusahaan\]/g, company);
-
-            const link = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-            window.location.href = link;
-        }
-
-        function sendWA(btn, phone, name, company) {
-            // Prevent clicking if already sent
-            if (btn.classList.contains('btn-sent')) return;
-
-            if (!phone) {
-                alert('Nomor WA tidak tersedia untuk ' + name);
-                return;
+            // 1. Eksekusi Kirim (Buka Tab Baru)
+            if (type === 'email') {
+                const subject = document.getElementById('emailSubject').value;
+                let body = document.getElementById('emailBody').value;
+                body = body.replace(/\[Nama\]/g, name).replace(/\[Perusahaan\]/g, company);
+                window.location.href = `mailto:${contact}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            } else {
+                let message = document.getElementById('waBody').value;
+                message = message.replace(/\[Nama\]/g, name).replace(/\[Perusahaan\]/g, company);
+                window.open(`https://wa.me/${contact}?text=${encodeURIComponent(message)}`, '_blank');
             }
 
-            markAsSent(btn);
-            localStorage.setItem(getStorageKey('wa', phone), 'true');
-            // Update stats
-            renderTable(globalData);
+            // 2. Update Tampilan UI (Optimistic UI)
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ...';
+            btn.className = "bg-yellow-100 text-yellow-700 px-3 py-1 rounded text-sm border border-yellow-200 cursor-wait";
 
-            let message = document.getElementById('waBody').value;
-            message = message.replace(/\[Nama\]/g, name);
-            message = message.replace(/\[Perusahaan\]/g, company);
+            // 3. Update Backend Google Sheet
+            try {
+                const payload = JSON.stringify({
+                    identifier: contact,
+                    type: type
+                });
 
-            const link = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-            window.open(link, '_blank');
+                // Gunakan URL yang sudah fix
+                await fetch(`${FIXED_SCRIPT_URL}?action=updateStatus`, {
+                    method: 'POST',
+                    body: payload,
+                    mode: 'no-cors', 
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                // Update Sukses Visual
+                btn.className = "btn-sent px-3 py-1 rounded text-sm border border-gray-200";
+                btn.innerHTML = '<i class="fas fa-check"></i>';
+                
+            } catch (err) {
+                console.error(err);
+                // Kembalikan tombol jika error, tapi biasanya karena no-cors kita tidak tahu error detail
+                // Asumsikan sukses di sisi user interface jika fetch tdk melempar exception network
+                btn.className = "btn-sent px-3 py-1 rounded text-sm border border-gray-200"; 
+                btn.innerHTML = '<i class="fas fa-check"></i> (Offline?)';
+            }
         }
     </script>
 </body>
