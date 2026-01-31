@@ -2,193 +2,224 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Proposal IKATP</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>IKATP Mobile Blaster</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         .btn-sent {
             background-color: #f3f4f6 !important;
             color: #9ca3af !important;
             cursor: default;
+            border-color: #e5e7eb !important;
         }
-        /* Custom scrollbar */
-        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
-        .custom-scroll::-webkit-scrollbar-track { background: #f9fafb; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
-        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+        /* Hide Scrollbar but allow scrolling */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Tab Active State */
+        .tab-active {
+            color: #15803d; /* green-700 */
+            border-bottom: 2px solid #15803d;
+            font-weight: 600;
+        }
+        .tab-inactive {
+            color: #6b7280; /* gray-500 */
+            border-bottom: 2px solid transparent;
+        }
     </style>
 </head>
-<body class="bg-gray-100 p-4 h-screen flex flex-col overflow-hidden">
+<body class="bg-gray-100 h-screen flex flex-col overflow-hidden">
 
-    <!-- Navbar Sederhana -->
-    <div class="bg-white border-b border-gray-200 px-6 py-3 flex justify-between items-center shrink-0 shadow-sm z-20">
-        <div class="flex items-center gap-3">
-            <div class="bg-green-700 text-white p-2 rounded-lg">
+    <!-- 1. Header Compact -->
+    <div class="bg-white border-b border-gray-200 px-4 py-3 flex justify-between items-center shrink-0 z-20 shadow-sm">
+        <div class="flex items-center gap-2">
+            <div class="bg-green-700 text-white w-8 h-8 rounded-lg flex items-center justify-center text-sm shadow-sm">
                 <i class="fas fa-paper-plane"></i>
             </div>
             <div>
-                <h1 class="text-lg font-bold text-gray-800 leading-tight">Dashboard Proposal IKATP</h1>
-                <p class="text-xs text-gray-500">Monitoring & Eksekusi Real-time</p>
+                <h1 class="text-base font-bold text-gray-800 leading-none">IKATP Blaster</h1>
+                <p class="text-[10px] text-gray-500 mt-0.5">Mobile Optimized</p>
             </div>
         </div>
-        <button onclick="loadDataFromSheet()" class="bg-gray-50 hover:bg-gray-100 text-gray-600 text-xs font-medium px-4 py-2 rounded-lg border border-gray-200 transition flex items-center gap-2">
-            <i class="fas fa-sync-alt" id="icon-refresh"></i> <span id="text-refresh">Refresh Data</span>
+        <button onclick="loadDataFromSheet()" class="bg-gray-50 active:bg-gray-200 text-gray-600 text-xs font-medium px-3 py-2 rounded-lg border border-gray-200 transition flex items-center gap-1.5 shadow-sm">
+            <i class="fas fa-sync-alt" id="icon-refresh"></i> <span class="hidden sm:inline" id="text-refresh">Refresh</span>
         </button>
     </div>
 
-    <div class="flex flex-1 overflow-hidden max-w-7xl mx-auto w-full gap-4 pt-4">
+    <!-- 2. Navigation Tabs (Menu Bawah Pindah ke Atas agar jempol fokus di list bawah) -->
+    <div class="bg-white border-b border-gray-200 flex text-sm font-medium shrink-0">
+        <button onclick="switchTab('list')" id="tab-list" class="flex-1 py-3 text-center tab-active transition-colors">
+            <i class="fas fa-list-ul mr-1.5"></i> Daftar & Aksi
+        </button>
+        <button onclick="switchTab('template')" id="tab-template" class="flex-1 py-3 text-center tab-inactive transition-colors">
+            <i class="fas fa-edit mr-1.5"></i> Edit Pesan
+        </button>
+    </div>
+
+    <!-- 3. Main Content Area -->
+    <div class="flex-1 overflow-hidden relative w-full max-w-lg mx-auto md:max-w-4xl">
         
-        <!-- Panel Kiri: Template Pesan (Collapsible di mobile idealnya, tapi kita buat statis dulu) -->
-        <div class="w-1/3 bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col overflow-hidden shrink-0">
-            <div class="p-4 bg-gray-50 border-b border-gray-200 font-bold text-gray-700 text-sm flex items-center justify-between">
-                <span><i class="fas fa-edit mr-2"></i>Template Pesan</span>
+        <!-- VIEW 1: LIST & DASHBOARD -->
+        <div id="view-list" class="h-full flex flex-col absolute inset-0 bg-gray-50 transition-opacity duration-300">
+            
+            <!-- Dashboard Grid (Scrollable if needed, but fitted 2x2) -->
+            <div class="p-3 grid grid-cols-2 gap-2 shrink-0">
+                <!-- Total -->
+                <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between">
+                    <span class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Total Target</span>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xl font-bold text-gray-800" id="stat-total">0</span>
+                        <i class="fas fa-users text-gray-200 text-lg"></i>
+                    </div>
+                </div>
+                
+                <!-- Progress Bar Global -->
+                <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-center">
+                    <div class="flex justify-between items-center mb-1.5">
+                        <span class="text-[10px] text-gray-400 uppercase font-bold">Selesai</span>
+                        <span class="text-xs font-bold text-green-600" id="stat-percent">0%</span>
+                    </div>
+                    <div class="w-full bg-gray-100 rounded-full h-1.5">
+                        <div id="global-progress" class="bg-green-600 h-1.5 rounded-full w-0 transition-all duration-700"></div>
+                    </div>
+                    <div class="mt-1 text-[10px] text-right text-gray-400" id="stat-remain">0 sisa</div>
+                </div>
+
+                <!-- Stats Detail Row -->
+                <div class="col-span-2 grid grid-cols-2 gap-2">
+                     <div class="bg-blue-50 p-2 rounded-lg border border-blue-100 flex items-center justify-between px-3">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-envelope text-blue-500 text-xs"></i>
+                            <span class="text-xs font-medium text-blue-700">Email</span>
+                        </div>
+                        <span class="text-sm font-bold text-blue-800" id="stat-email">0</span>
+                     </div>
+                     <div class="bg-green-50 p-2 rounded-lg border border-green-100 flex items-center justify-between px-3">
+                        <div class="flex items-center gap-2">
+                            <i class="fab fa-whatsapp text-green-500 text-xs"></i>
+                            <span class="text-xs font-medium text-green-700">WA</span>
+                        </div>
+                        <span class="text-sm font-bold text-green-800" id="stat-wa">0</span>
+                     </div>
+                </div>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="px-3 pb-2 shrink-0">
+                <div class="relative">
+                    <input type="text" id="searchInput" onkeyup="filterList()" placeholder="Cari nama alumni..." class="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 shadow-sm">
+                    <i class="fas fa-search absolute left-3.5 top-3.5 text-gray-400 text-xs"></i>
+                </div>
+            </div>
+
+            <!-- Card List Container -->
+            <div class="flex-1 overflow-y-auto no-scrollbar px-3 pb-20 space-y-3" id="cardContainer">
+                <!-- Loading State -->
+                <div class="flex flex-col items-center justify-center h-48 text-gray-400">
+                    <i class="fas fa-circle-notch fa-spin text-2xl mb-2 text-green-600"></i>
+                    <span class="text-xs font-medium">Memuat Data...</span>
+                </div>
             </div>
             
-            <div class="p-5 overflow-y-auto custom-scroll space-y-6">
-                <!-- Email Draft -->
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
-                        Subject Email
-                    </label>
-                    <input type="text" id="emailSubject" value="Penawaran Kerjasama - MUBES IKATP 2026" class="block w-full rounded-lg border-gray-300 border p-2.5 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 bg-gray-50 focus:bg-white transition" placeholder="Subjek Email">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
-                        Body Email
-                    </label>
-                    <textarea id="emailBody" rows="6" class="block w-full rounded-lg border-gray-300 border p-2.5 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 bg-gray-50 focus:bg-white transition">Halo [Nama],
+             <!-- Floating Info -->
+             <div class="absolute bottom-4 left-0 right-0 text-center pointer-events-none">
+                <span class="bg-black/70 text-white text-[10px] px-3 py-1 rounded-full backdrop-blur-sm shadow-lg">
+                    Menampilkan <span id="display-count">0</span> data
+                </span>
+             </div>
+        </div>
+
+        <!-- VIEW 2: TEMPLATE SETTINGS -->
+        <div id="view-template" class="h-full flex flex-col absolute inset-0 bg-white translate-x-full transition-transform duration-300 overflow-y-auto pb-20">
+             <div class="p-5 space-y-6 max-w-lg mx-auto w-full">
+                
+                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                    <h3 class="font-bold text-gray-800 mb-3 flex items-center text-sm">
+                        <span class="bg-blue-100 text-blue-600 w-6 h-6 rounded flex items-center justify-center mr-2"><i class="fas fa-envelope text-xs"></i></span> 
+                        Template Email
+                    </h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase">Subjek</label>
+                            <input type="text" id="emailSubject" value="Penawaran Kerjasama - MUBES IKATP 2026" class="mt-1 block w-full rounded-lg border-gray-300 border p-2.5 text-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase">Isi Email</label>
+                            <textarea id="emailBody" rows="6" class="mt-1 block w-full rounded-lg border-gray-300 border p-2.5 text-sm focus:ring-blue-500 focus:border-blue-500">Halo [Nama],
 
 Kami mengajukan proposal sponsorship untuk [Perusahaan].
 Link: https://drive.google.com/file/d/1205wFDiMSl_lCT_lJepegecq_66BRH7V/view?usp=sharing
 
 Salam, Panitia.</textarea>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="border-t border-gray-100 pt-4"></div>
-
-                <!-- WA Draft -->
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2 flex items-center">
-                        Isi WhatsApp <i class="fab fa-whatsapp text-green-500 ml-2"></i>
-                    </label>
-                    <textarea id="waBody" rows="8" class="block w-full rounded-lg border-gray-300 border p-2.5 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 bg-gray-50 focus:bg-white transition">Halo [Nama],
+                <div class="bg-green-50 p-4 rounded-xl border border-green-100">
+                    <h3 class="font-bold text-gray-800 mb-3 flex items-center text-sm">
+                         <span class="bg-green-100 text-green-600 w-6 h-6 rounded flex items-center justify-center mr-2"><i class="fab fa-whatsapp text-xs"></i></span> 
+                         Template WhatsApp
+                    </h3>
+                    <div>
+                        <textarea id="waBody" rows="8" class="block w-full rounded-lg border-gray-300 border p-2.5 text-sm focus:ring-green-500 focus:border-green-500">Halo [Nama],
 
 Kami dari panitia MUBES IKATP ingin menawarkan kerjasama sponsorship untuk [Perusahaan].
 
 Proposal: https://drive.google.com/file/d/1205wFDiMSl_lCT_lJepegecq_66BRH7V/view?usp=sharing
 
 Terima kasih.</textarea>
-                    <div class="mt-2 text-[10px] text-gray-400 bg-gray-50 p-2 rounded border border-gray-100">
-                        <i class="fas fa-info-circle mr-1"></i> Variabel <b>[Nama]</b> & <b>[Perusahaan]</b> otomatis terisi.
                     </div>
+                    <p class="text-[10px] text-gray-500 mt-2 bg-white p-2 rounded border border-green-100">
+                        <i class="fas fa-magic text-yellow-500 mr-1"></i> Gunakan <b>[Nama]</b> dan <b>[Perusahaan]</b> agar otomatis berubah.
+                    </p>
+                </div>
+
+                <!-- Save Info -->
+                <div class="text-center text-xs text-gray-400">
+                    Perubahan template disimpan otomatis sementara.
                 </div>
             </div>
         </div>
 
-        <!-- Panel Kanan: Dashboard & Data -->
-        <div class="w-2/3 flex flex-col gap-4 overflow-hidden">
-            
-            <!-- Dashboard Cards -->
-            <div class="grid grid-cols-4 gap-4 shrink-0">
-                <!-- Card 1: Total Alumni -->
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-                    <div class="text-xs text-gray-500 font-medium uppercase">Total Alumni</div>
-                    <div class="flex items-end justify-between mt-1">
-                        <span class="text-2xl font-bold text-gray-800" id="stat-total">0</span>
-                        <div class="text-gray-300 bg-gray-100 p-1.5 rounded-lg">
-                            <i class="fas fa-users"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Card 2: Email Terkirim -->
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 relative overflow-hidden group">
-                    <div class="text-xs text-gray-500 font-medium uppercase">Email Terkirim</div>
-                    <div class="flex items-end justify-between mt-1 relative z-10">
-                        <span class="text-2xl font-bold text-blue-600" id="stat-email">0</span>
-                        <div class="text-blue-200 bg-blue-50 p-1.5 rounded-lg">
-                            <i class="fas fa-paper-plane"></i>
-                        </div>
-                    </div>
-                    <!-- Mini progress bar bg -->
-                    <div class="absolute bottom-0 left-0 h-1 bg-blue-100 w-full">
-                        <div id="prog-email-bar" class="h-full bg-blue-500 w-0 transition-all duration-500"></div>
-                    </div>
-                </div>
-
-                <!-- Card 3: WA Terkirim -->
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 relative overflow-hidden">
-                    <div class="text-xs text-gray-500 font-medium uppercase">WA Terkirim</div>
-                    <div class="flex items-end justify-between mt-1 relative z-10">
-                        <span class="text-2xl font-bold text-green-600" id="stat-wa">0</span>
-                        <div class="text-green-200 bg-green-50 p-1.5 rounded-lg">
-                            <i class="fab fa-whatsapp"></i>
-                        </div>
-                    </div>
-                     <div class="absolute bottom-0 left-0 h-1 bg-green-100 w-full">
-                        <div id="prog-wa-bar" class="h-full bg-green-500 w-0 transition-all duration-500"></div>
-                    </div>
-                </div>
-
-                 <!-- Card 4: Global Progress -->
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col justify-center">
-                    <div class="flex justify-between items-center mb-1">
-                        <span class="text-xs text-gray-500 font-medium uppercase">Total Progress</span>
-                        <span class="text-xs font-bold text-gray-700" id="stat-percent">0%</span>
-                    </div>
-                    <div class="w-full bg-gray-100 rounded-full h-2.5">
-                        <div id="global-progress" class="bg-gray-800 h-2.5 rounded-full w-0 transition-all duration-700" style="width: 0%"></div>
-                    </div>
-                    <div class="mt-2 text-[10px] text-gray-400 text-right" id="stat-remain">0 sisa</div>
-                </div>
-            </div>
-
-            <!-- Table Container -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col flex-1 overflow-hidden">
-                <div class="px-5 py-3 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
-                    <h2 class="font-bold text-gray-700 text-sm">Daftar Target</h2>
-                    <!-- Search Filter (Visual Only for now) -->
-                    <div class="relative">
-                        <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Cari nama..." class="pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-md focus:outline-none focus:border-green-500 w-48">
-                        <i class="fas fa-search absolute left-2.5 top-2 text-gray-400 text-xs"></i>
-                    </div>
-                </div>
-
-                <div class="flex-1 overflow-auto custom-scroll relative">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50 sticky top-0 z-10 shadow-sm">
-                            <tr>
-                                <th class="px-5 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider w-1/3">Alumni & Perusahaan</th>
-                                <th class="px-5 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Kontak</th>
-                                <th class="px-5 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
-                                <th class="px-5 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Eksekusi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="contactTable" class="bg-white divide-y divide-gray-200">
-                             <tr>
-                                <td colspan="4" class="px-6 py-20 text-center">
-                                    <div class="flex flex-col items-center justify-center text-gray-400 animate-pulse">
-                                        <div class="h-4 w-4 bg-gray-300 rounded-full mb-2"></div>
-                                        <span class="text-xs">Sinkronisasi Data...</span>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="p-2 bg-gray-50 border-t border-gray-200 text-[10px] text-center text-gray-400">
-                    Menampilkan <span id="display-count">0</span> baris data.
-                </div>
-            </div>
-        </div>
     </div>
 
     <script>
         const FIXED_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz7EVjxbdbu1t88M9ePW1Xpb1-ow7b2gZTJSY2yJPITvQ46Wsc3Eoa72qE2gf3Myob26A/exec";
-        
+        let globalData = [];
+
+        // --- UI Functions ---
+        function switchTab(tab) {
+            const viewList = document.getElementById('view-list');
+            const viewTemplate = document.getElementById('view-template');
+            const tabList = document.getElementById('tab-list');
+            const tabTemplate = document.getElementById('tab-template');
+
+            if (tab === 'list') {
+                viewList.classList.remove('-translate-x-full'); // Bring back list
+                viewTemplate.classList.add('translate-x-full'); // Push template right
+                viewTemplate.classList.remove('inset-0'); // Hack to prevent overlap touch issues
+                
+                // Reset standard positioning after animation
+                setTimeout(() => {
+                     viewList.style.transform = 'translateX(0)';
+                     viewTemplate.style.transform = 'translateX(100%)';
+                }, 10);
+
+                tabList.className = "flex-1 py-3 text-center tab-active transition-colors";
+                tabTemplate.className = "flex-1 py-3 text-center tab-inactive transition-colors";
+            } else {
+                viewList.style.transform = 'translateX(-100%)';
+                viewTemplate.style.transform = 'translateX(0)';
+                viewTemplate.classList.add('inset-0');
+
+                tabList.className = "flex-1 py-3 text-center tab-inactive transition-colors";
+                tabTemplate.className = "flex-1 py-3 text-center tab-active transition-colors";
+            }
+        }
+
+        // --- Data Logic ---
         document.addEventListener('DOMContentLoaded', () => {
             loadDataFromSheet();
         });
@@ -203,22 +234,28 @@ Terima kasih.</textarea>
         async function loadDataFromSheet() {
             const btnIcon = document.getElementById('icon-refresh');
             const btnText = document.getElementById('text-refresh');
+            const container = document.getElementById('cardContainer');
             
             btnIcon.classList.add('fa-spin');
-            btnText.innerText = "Loading...";
+            if(btnText) btnText.innerText = "...";
 
             try {
                 const response = await fetch(`${FIXED_SCRIPT_URL}?action=getData`);
                 const data = await response.json();
+                globalData = data;
                 
-                renderTable(data);
+                renderCards(data);
                 updateDashboard(data);
                 
-                btnText.innerText = "Data Updated";
-                setTimeout(() => btnText.innerText = "Refresh Data", 2000);
+                if(btnText) btnText.innerText = "Refresh";
             } catch (error) {
                 console.error(error);
-                alert("Gagal koneksi. Cek internet.");
+                container.innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-48 text-red-400 p-4 text-center">
+                        <i class="fas fa-wifi text-3xl mb-2"></i>
+                        <span class="text-sm">Gagal memuat data.<br>Cek koneksi internet Anda.</span>
+                        <button onclick="loadDataFromSheet()" class="mt-4 bg-white border border-red-200 text-red-500 px-4 py-2 rounded-lg text-xs shadow-sm">Coba Lagi</button>
+                    </div>`;
             } finally {
                 btnIcon.classList.remove('fa-spin');
             }
@@ -230,73 +267,45 @@ Terima kasih.</textarea>
 
             let emailCount = 0;
             let waCount = 0;
-            let fullyCompleted = 0; // Both sent
 
             data.forEach(row => {
                 const sEmail = row['Status Email'] || '';
                 const sWA = row['Status WA'] || '';
-                
-                const isEmail = sEmail.toLowerCase().includes('terkirim');
-                const isWA = sWA.toLowerCase().includes('terkirim');
-
-                if (isEmail) emailCount++;
-                if (isWA) waCount++;
-                if (isEmail && isWA) fullyCompleted++;
+                if (sEmail.toLowerCase().includes('terkirim')) emailCount++;
+                if (sWA.toLowerCase().includes('terkirim')) waCount++;
             });
 
-            // Update DOM Numbers
             document.getElementById('stat-total').innerText = total;
             document.getElementById('stat-email').innerText = emailCount;
             document.getElementById('stat-wa').innerText = waCount;
             document.getElementById('display-count').innerText = total;
 
-            // Update Progress Bars
-            const emailPercent = Math.round((emailCount / total) * 100);
-            const waPercent = Math.round((waCount / total) * 100);
-            
-            // Total Progress (Average of actions done vs total possible actions)
-            // Total actions possible = total * 2 (Email + WA)
             const totalActions = total * 2;
             const doneActions = emailCount + waCount;
             const globalPercent = Math.round((doneActions / totalActions) * 100);
 
-            document.getElementById('prog-email-bar').style.width = `${emailPercent}%`;
-            document.getElementById('prog-wa-bar').style.width = `${waPercent}%`;
-            
             document.getElementById('global-progress').style.width = `${globalPercent}%`;
             document.getElementById('stat-percent').innerText = `${globalPercent}%`;
-            document.getElementById('stat-remain').innerText = `${totalActions - doneActions} aksi tersisa`;
+            document.getElementById('stat-remain').innerText = `${totalActions - doneActions} aksi`;
         }
 
-        function filterTable() {
-            const input = document.getElementById("searchInput");
-            const filter = input.value.toUpperCase();
-            const table = document.getElementById("contactTable");
-            const tr = table.getElementsByTagName("tr");
-            let visibleCount = 0;
-
-            for (let i = 0; i < tr.length; i++) {
-                // Search in Name (col 0) and Company
-                const tdName = tr[i].getElementsByTagName("td")[0];
-                if (tdName) {
-                    const txtValue = tdName.textContent || tdName.innerText;
-                    if (txtValue.toUpperCase().indexOf(filter) > -1) {
-                        tr[i].style.display = "";
-                        visibleCount++;
-                    } else {
-                        tr[i].style.display = "none";
-                    }
-                }       
-            }
-            document.getElementById('display-count').innerText = visibleCount;
+        function filterList() {
+            const input = document.getElementById("searchInput").value.toLowerCase();
+            const filtered = globalData.filter(row => {
+                const name = (row['Nama'] || '').toLowerCase();
+                const company = (row['Perusahaan'] || '').toLowerCase();
+                return name.includes(input) || company.includes(input);
+            });
+            renderCards(filtered);
+            document.getElementById('display-count').innerText = filtered.length;
         }
 
-        function renderTable(data) {
-            const tbody = document.getElementById('contactTable');
-            tbody.innerHTML = '';
+        function renderCards(data) {
+            const container = document.getElementById('cardContainer');
+            container.innerHTML = '';
 
             if (!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="text-center p-8 text-gray-400">Data kosong.</td></tr>';
+                container.innerHTML = '<div class="text-center p-8 text-gray-400 text-sm">Data tidak ditemukan.</div>';
                 return;
             }
 
@@ -313,57 +322,62 @@ Terima kasih.</textarea>
                 const isWaDone = statusWA && statusWA.toLowerCase().includes('terkirim');
                 const isFullyDone = isEmailDone && isWaDone;
 
-                const tr = document.createElement('tr');
-                // Dim rows that are fully done
-                tr.className = isFullyDone 
-                    ? "bg-gray-50 opacity-75 grayscale-[50%] transition border-l-4 border-green-500" 
-                    : "hover:bg-blue-50 transition border-l-4 border-transparent hover:border-blue-400 bg-white";
-                
-                tr.innerHTML = `
-                    <td class="px-5 py-3 align-top">
-                        <div class="text-sm font-bold text-gray-800">${nama}</div>
-                        <div class="text-xs text-gray-500 flex items-center mt-1">
-                            <i class="fas fa-briefcase w-4 text-gray-300"></i> ${perusahaan}
+                // Card Element
+                const card = document.createElement('div');
+                card.className = isFullyDone 
+                    ? "bg-gray-50 rounded-xl border border-gray-200 p-4 opacity-75 grayscale-[30%]" 
+                    : "bg-white rounded-xl border border-gray-200 shadow-sm p-4";
+
+                card.innerHTML = `
+                    <!-- Header: Name & Company -->
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <h3 class="font-bold text-gray-800 text-sm leading-tight">${nama}</h3>
+                            <div class="text-xs text-gray-500 mt-1 flex items-center">
+                                <i class="fas fa-building text-[10px] mr-1.5 opacity-60"></i> ${perusahaan}
+                            </div>
                         </div>
-                    </td>
-                    <td class="px-5 py-3 align-top">
-                        <div class="space-y-1">
-                            ${email ? `<div class="text-xs text-gray-600 flex items-center truncate max-w-[150px]" title="${email}">
-                                <i class="fas fa-envelope w-4 text-gray-300"></i> ${email}
-                            </div>` : ''}
-                            ${wa ? `<div class="text-xs text-gray-600 flex items-center truncate">
-                                <i class="fab fa-whatsapp w-4 text-gray-300"></i> ${wa}
-                            </div>` : ''}
+                        ${isFullyDone ? '<span class="text-green-500 text-xs"><i class="fas fa-check-circle text-lg"></i></span>' : ''}
+                    </div>
+
+                    <!-- Actions Grid -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <!-- Email Action -->
+                        <div class="flex flex-col gap-2">
+                             <div class="flex items-center justify-between">
+                                <span class="text-[10px] font-bold text-gray-400 uppercase">Email</span>
+                                ${isEmailDone 
+                                    ? '<span class="text-[10px] text-green-600 bg-green-50 px-1.5 py-0.5 rounded border border-green-100">Terkirim</span>' 
+                                    : '<span class="text-[10px] text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100">Belum</span>'}
+                             </div>
+                             <button onclick="sendAction(this, 'email', '${email}', '${nama.replace(/'/g, "\\'")}', '${perusahaan}')"
+                                     class="w-full py-2.5 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition active:scale-95 ${isEmailDone ? 'btn-sent border text-gray-400' : 'bg-blue-50 text-blue-700 border border-blue-200 active:bg-blue-100'}">
+                                 ${isEmailDone ? '<i class="fas fa-check"></i> Selesai' : '<i class="fas fa-paper-plane"></i> Kirim'}
+                             </button>
                         </div>
-                    </td>
-                    <td class="px-5 py-3 align-middle text-center">
-                         <div class="flex justify-center gap-1">
-                            <div class="w-2.5 h-2.5 rounded-full ${isEmailDone ? 'bg-blue-500' : 'bg-gray-200'}" title="Email Status"></div>
-                            <div class="w-2.5 h-2.5 rounded-full ${isWaDone ? 'bg-green-500' : 'bg-gray-200'}" title="WA Status"></div>
+
+                        <!-- WA Action -->
+                        <div class="flex flex-col gap-2">
+                             <div class="flex items-center justify-between">
+                                <span class="text-[10px] font-bold text-gray-400 uppercase">WhatsApp</span>
+                                ${isWaDone 
+                                    ? '<span class="text-[10px] text-green-600 bg-green-50 px-1.5 py-0.5 rounded border border-green-100">Terkirim</span>' 
+                                    : '<span class="text-[10px] text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100">Belum</span>'}
+                             </div>
+                             <button onclick="sendAction(this, 'wa', '${formattedWA}', '${nama.replace(/'/g, "\\'")}', '${perusahaan}')"
+                                     class="w-full py-2.5 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition active:scale-95 ${isWaDone ? 'btn-sent border text-gray-400' : 'bg-green-50 text-green-700 border border-green-200 active:bg-green-100'}">
+                                 ${isWaDone ? '<i class="fas fa-check"></i> Selesai' : '<i class="fab fa-whatsapp text-sm"></i> Kirim'}
+                             </button>
                         </div>
-                    </td>
-                    <td class="px-5 py-3 align-middle text-right">
-                        <div class="flex justify-end gap-2">
-                            <button onclick="sendAction(this, 'email', '${email}', '${nama.replace(/'/g, "\\'")}', '${perusahaan}')" 
-                                    title="Kirim Email"
-                                    class="${isEmailDone ? 'btn-sent border-gray-200 text-gray-400' : 'bg-white border-blue-200 text-blue-600 hover:bg-blue-600 hover:text-white shadow-sm'} border rounded-md px-3 py-1.5 text-xs transition">
-                                 ${isEmailDone ? '<i class="fas fa-check"></i>' : '<i class="fas fa-paper-plane"></i>'}
-                            </button>
-                            <button onclick="sendAction(this, 'wa', '${formattedWA}', '${nama.replace(/'/g, "\\'")}', '${perusahaan}')"
-                                    title="Kirim WhatsApp"
-                                    class="${isWaDone ? 'btn-sent border-gray-200 text-gray-400' : 'bg-white border-green-200 text-green-600 hover:bg-green-600 hover:text-white shadow-sm'} border rounded-md px-3 py-1.5 text-xs transition">
-                                 ${isWaDone ? '<i class="fas fa-check"></i>' : '<i class="fab fa-whatsapp"></i>'}
-                            </button>
-                        </div>
-                    </td>
+                    </div>
                 `;
-                tbody.appendChild(tr);
+                container.appendChild(card);
             });
         }
 
         async function sendAction(btn, type, contact, name, company) {
             if (btn.classList.contains('btn-sent')) return;
-            if (!contact) { alert('Kontak kosong!'); return; }
+            if (!contact) { alert('Kontak kosong/tidak valid!'); return; }
 
             // 1. Open App
             if (type === 'email') {
@@ -377,42 +391,51 @@ Terima kasih.</textarea>
                 window.open(`https://wa.me/${contact}?text=${encodeURIComponent(message)}`, '_blank');
             }
 
-            // 2. UI Update
+            // 2. UI Loading
             const originalInner = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>';
-            btn.classList.add('cursor-wait', 'opacity-70');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            btn.classList.add('opacity-50', 'pointer-events-none');
 
             // 3. Backend Update
             try {
                 const payload = JSON.stringify({ identifier: contact, type: type });
-                await fetch(`${FIXED_SCRIPT_URL}?action=updateStatus`, {
+                // Fire and forget style for smoother UX on mobile
+                fetch(`${FIXED_SCRIPT_URL}?action=updateStatus`, {
                     method: 'POST',
                     body: payload,
                     mode: 'no-cors', 
                     headers: { 'Content-Type': 'application/json' }
                 });
 
-                btn.className = "btn-sent border border-gray-200 rounded-md px-3 py-1.5 text-xs text-gray-400";
-                btn.innerHTML = '<i class="fas fa-check"></i>';
+                // Optimistic UI Update immediately
+                btn.className = "w-full py-2.5 rounded-lg text-xs font-bold flex items-center justify-center gap-2 btn-sent border text-gray-400";
+                btn.innerHTML = '<i class="fas fa-check"></i> Selesai';
                 
-                // Refresh dashboard numbers locally for immediate feedback
-                updateLocalDashboard(type);
+                // Update local stats
+                updateLocalStats(type);
 
             } catch (err) {
                 console.error(err);
-                btn.className = "btn-sent border border-gray-200 rounded-md px-3 py-1.5 text-xs text-gray-400"; 
-                btn.innerHTML = '<i class="fas fa-check"></i>';
+                btn.innerHTML = originalInner;
+                btn.classList.remove('opacity-50', 'pointer-events-none');
+                alert("Gagal menyimpan status, tapi aplikasi WA/Email sudah terbuka.");
             }
         }
 
-        function updateLocalDashboard(type) {
-            // Simple increment for immediate visual feedback without full reload
+        function updateLocalStats(type) {
+            // Simple visual increment
             if(type === 'email') {
                 const el = document.getElementById('stat-email');
                 el.innerText = parseInt(el.innerText) + 1;
             } else {
                 const el = document.getElementById('stat-wa');
                 el.innerText = parseInt(el.innerText) + 1;
+            }
+            // Update global prog bar slightly
+            const currentPercent = parseInt(document.getElementById('stat-percent').innerText);
+            if(currentPercent < 100) {
+                 // rough estimation just for visual feedback
+                 document.getElementById('global-progress').style.width = `${currentPercent + 1}%`;
             }
         }
     </script>
